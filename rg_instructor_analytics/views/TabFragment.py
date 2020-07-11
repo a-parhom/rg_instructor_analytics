@@ -14,6 +14,7 @@ from courseware.courses import get_course_by_id
 from edxmako.shortcuts import render_to_string
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from rg_instructor_analytics.utils.AccessMixin import AccessMixin
+from rg_instructor_analytics.tasks import get_course_keys_from_settings
 from student.models import CourseAccessRole
 
 # NOTE(flying-pi) reload(sys) is used for restore method `setdefaultencoding`,
@@ -54,7 +55,7 @@ class InstructorAnalyticsFragmentView(AccessMixin, FragmentView):
         result = []
         # For staff user we need return all available courses on platform.
         if user.is_staff:
-            available_courses = CourseOverview.objects.all()
+            available_courses = CourseOverview.objects.filter(id__in=get_course_keys_from_settings())
             for course in available_courses:
                 try:
                     result.append(get_course_by_id(course.id, depth=0))
@@ -62,7 +63,7 @@ class InstructorAnalyticsFragmentView(AccessMixin, FragmentView):
                     continue
         # Return courses, where user has permission as instructor of staff
         else:
-            available_courses = CourseAccessRole.objects.filter(user=user, role__in=['instructor', 'staff'])
+            available_courses = CourseAccessRole.objects.filter(course_id__in=get_course_keys_from_settings()).filter(user=user, role__in=['instructor', 'staff'])
             exist_courses_id = []
             for record in available_courses:
                 try:
