@@ -67,6 +67,13 @@ cron_enroll_settings = getattr(
 )
 
 
+def get_course_keys_from_settings():
+    keys = []
+    for course_id in settings.RG_ANALYTICS_COURSES:
+        keys.append(CourseKey.from_string(course_id))
+    return keys
+
+
 @periodic_task(run_every=crontab(**cron_enroll_settings))
 def enrollment_collector_date():
     """
@@ -81,6 +88,7 @@ def enrollment_collector_date():
         CourseEnrollment.history
         .filter(~Q(history_type='+'))
         .filter(history_date__gt=last_update)
+        .filter(course_id__in=get_course_keys_from_settings())
         .values("history_date", "is_active", "user", "course_id")
         .order_by('history_date')
     )
@@ -161,6 +169,7 @@ def get_items_for_grade_update():
         items_for_update = (
             StudentModule.objects
             .filter(module_type__exact='problem', modified__gt=last_update_info.last().last_update)
+            .filter(course_id__in=get_course_keys_from_settings())
             .values('student__id', 'course_id')
             .order_by('student__id', 'course_id')
             .distinct()
@@ -169,6 +178,7 @@ def get_items_for_grade_update():
         items_for_update = (
             CourseEnrollment.objects
             .filter(is_active=True)
+            .filter(course_id__in=get_course_keys_from_settings())
             .values('user__id', 'course_id')
             .order_by('user__id', 'course_id')
             .distinct()
