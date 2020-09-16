@@ -7,8 +7,8 @@ from time import mktime
 
 from django.conf import settings
 from django.http import Http404
+from openedx.core.djangoapps.plugin_api.views import EdxFragmentView
 from web_fragments.fragment import Fragment
-from web_fragments.views import FragmentView
 
 from courseware.courses import get_course_by_id
 from edxmako.shortcuts import render_to_string
@@ -25,7 +25,7 @@ JS_URL = '{static_url}rg_instructor_analytics/js/'.format(static_url=settings.ST
 CSS_URL = '{static_url}rg_instructor_analytics/css/'.format(static_url=settings.STATIC_URL)
 
 
-class InstructorAnalyticsFragmentView(AccessMixin, FragmentView):
+class InstructorAnalyticsFragmentView(AccessMixin, EdxFragmentView):
     """
     Fragment for render tab.
     """
